@@ -4,13 +4,15 @@ import Game from './scenes/game'
 var config = {
     type: Phaser.AUTO,
     parent: 'phaser-example',
-    width: 360,
-    height: 200,
+    width: 416,
+    height: 208,
     physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },
-            debug: false
+        default: 'matter',
+        matter: {
+            gravity: {
+                y: 0,
+                x: 0
+            }
         }
     },
     scene: [Game],

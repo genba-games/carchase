@@ -1,0 +1,12 @@
+{ "columns":90,
+ "image":"asphalt_sheet.png",
+ "imageheight":16,
+ "imagewidth":1440,
+ "margin":0,
+ "name":"asphalt_sheet",
+ "spacing":0,
+ "tilecount":90,
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset"
+}
