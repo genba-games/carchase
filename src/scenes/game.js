@@ -1,9 +1,18 @@
 import {range} from 'lodash'
 export default class Game extends Phaser.Scene {
     constructor() {
-        super('game')
+        super({key:'Game'})
     }
+    init(){
+        var canvas = this.sys.game.canvas;
+        var fullscreen = this.sys.game.device.fullscreen;
 
+        if (!fullscreen.available)
+        {
+            return;
+        }
+        canvas[fullscreen.request]();
+    }
     preload() {
         this.load.image('arrow', 'assets/arrow.png');
         this.load.spritesheet('car', 'assets/car.png', { frameWidth: 12, frameHeight: 16 });
@@ -11,6 +20,7 @@ export default class Game extends Phaser.Scene {
         this.load.image('asphalt', 'assets/asphalt_sheet.png')
         this.load.image('grass', 'assets/grass_sheet.png')
         this.load.spritesheet('tire_particle','assets/tire_particle.png',{ frameWidth: 8, frameHeight: 8 })
+        this.load.spritesheet('fullscreen','assets/fullscreen.png',{ frameWidth: 16, frameHeight: 16 })
     }
 
     create() {
@@ -19,7 +29,6 @@ export default class Game extends Phaser.Scene {
 
         // tilemap
         this.map = this.add.tilemap('tilemap')
-        console.log(this.map)
         var grass_sheet = this.map.addTilesetImage('grass_sheet', 'grass');
         this.backgroundLayer = this.map.createStaticLayer('grass', grass_sheet);
         var asphalt_sheet = this.map.addTilesetImage('asphalt_sheet', 'asphalt');
@@ -38,15 +47,29 @@ export default class Game extends Phaser.Scene {
         left.on('pointerover', () => { this.move.left = true }, this);
         left.on('pointerout', () => { this.move.left = false }, this);
         left.on('pointerup', () => { this.move.left = false }, this);
-        menuContainer.add([right, left])
+        let fullscreen = this.add.image(16,16,'fullscreen').setInteractive()
+        fullscreen.on('pointerover',()=>{
+            var canvas = this.sys.game.canvas;
+            var fullscreen = this.sys.game.device.fullscreen;
+            // make it a toggle
+            window.fullscreenFunc = function() {
+                canvas[fullscreen.request]()
+            }
+        },this)
+        fullscreen.on('pointerout',()=>{
+            window.fullscreenFunc=null
+        },this)
+        menuContainer.add([right, left, fullscreen])
         menuContainer.depth=1
-
+        menuContainer.each(gui=>{
+            gui.setScrollFactor(0)
+        })
         // Player
         this.car = this.matter.add.sprite(180, 100, 'car')
         this.car.setFixedRotation();
         this.car.setFrictionAir(0.05);
         this.car.setMass(30);
-
+        
         let particles = this.add.particles('tire_particle')
         this.emitter = particles.createEmitter({
             speed:100,
@@ -54,9 +77,8 @@ export default class Game extends Phaser.Scene {
             alpha:{start:1,end:0},
             blendMode:'ADD',
         })
-
+        
         this.matter.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-        console.log(this.car)
         this.anims.create({
             key: 'idle',
             frames: this.anims.generateFrameNumbers('car', { start: 0, end: 2 }),
@@ -64,8 +86,13 @@ export default class Game extends Phaser.Scene {
             repeat: -1
         })
         this.car.play('idle')
-        console.log(this.emitter)
         this.emitter.startFollow(this.car)
+        // Camera
+        this.cameras.main.setSize(416, 208);
+        // Sets the camera bound to the tilemap h and w, so if we change it it 
+        //will change aswell
+        this.cameras.main.setBounds(0,0,this.map.widthInPixels,this.map.heightInPixels)
+        this.cameras.main.startFollow(this.car)
     }
     rightButton(event) {
         // this.car.angle += 5

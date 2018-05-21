@@ -1,9 +1,13 @@
 import 'phaser';
 import Game from './scenes/game'
+import Boot from './scenes/boot'
+
+
+
 
 var config = {
     type: Phaser.AUTO,
-    parent: 'phaser-example',
+    parent: 'play',
     width: 416,
     height: 208,
     physics: {
@@ -15,8 +19,13 @@ var config = {
             }
         }
     },
-    scene: [Game],
+    scene: [Boot,Game],
     pixelArt: true
 };
 
 window.game = new Phaser.Game(config);
+
+window.fullscreenFunc = null;
+document.querySelector('#play').addEventListener('click', function() {
+    if(window.fullscreenFunc !== null) window.fullscreenFunc()
+});
