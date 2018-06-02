@@ -1,7 +1,7 @@
 {
-  "name": "phaser3-project-template",
-  "version": "1.0.9",
-  "description": "A Phaser 3 Project Template",
+  "name": "car-chase",
+  "version": "0.0.1",
+  "description": "Car chase",
   "main": "src/index.js",
   "scripts": {
     "build": "webpack",
@@ -9,21 +9,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/photonstorm/phaser3-project-template.git"
+    "url": "git+https://berithpy@github.com/genba-games/carchase.git"
   },
   "author": "Richard Davey <rdavey@gmail.com> (http://www.photonstorm.com)",
   "license": "MIT",
   "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
   "bugs": {
-    "url": "https://github.com/photonstorm/phaser3-project-template/issues"
+    "url": "https://berithpy@github.com/genba-games/carchase"
   },
-  "homepage": "https://github.com/photonstorm/phaser3-project-template#readme",
+  "homepage": "https://berithpy@github.com/genba-games/carchase#readme",
   "devDependencies": {
     "webpack-dev-server": "^2.11.0",
     "webpack": "^3.4.1",
     "raw-loader": "^0.5.1"
   },
   "dependencies": {
-    "phaser": "^3.8.0"
+    "phaser": "^3.9.0"
   }
 }

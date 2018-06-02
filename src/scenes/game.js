@@ -1,14 +1,12 @@
-import {range} from 'lodash'
+import { range } from 'lodash'
 export default class Game extends Phaser.Scene {
     constructor() {
-        super({key:'Game'})
+        super({ key: 'Game' })
     }
-    init(){
+    init() {
         var canvas = this.sys.game.canvas;
         var fullscreen = this.sys.game.device.fullscreen;
-
-        if (!fullscreen.available)
-        {
+        if (!fullscreen.available) {
             return;
         }
         canvas[fullscreen.request]();
@@ -19,8 +17,8 @@ export default class Game extends Phaser.Scene {
         this.load.tilemapTiledJSON('tilemap', 'assets/road1.json')
         this.load.image('asphalt', 'assets/asphalt_sheet.png')
         this.load.image('grass', 'assets/grass_sheet.png')
-        this.load.spritesheet('tire_particle','assets/tire_particle.png',{ frameWidth: 8, frameHeight: 8 })
-        this.load.spritesheet('fullscreen','assets/fullscreen.png',{ frameWidth: 16, frameHeight: 16 })
+        this.load.spritesheet('tire_particle', 'assets/tire_particle.png', { frameWidth: 8, frameHeight: 8 })
+        this.load.spritesheet('fullscreen', 'assets/fullscreen.png', { frameWidth: 16, frameHeight: 16 })
     }
 
     create() {
@@ -33,6 +31,28 @@ export default class Game extends Phaser.Scene {
         this.backgroundLayer = this.map.createStaticLayer('grass', grass_sheet);
         var asphalt_sheet = this.map.addTilesetImage('asphalt_sheet', 'asphalt');
         this.roadLayer = this.map.createStaticLayer('asphalt', asphalt_sheet)
+        this.roadLayer.setCollisionByProperty({ collides: true })
+        this.matter.world.convertTilemapLayer(this.roadLayer);
+        this.roadLayer.forEachTile((tile) => {
+            let type = tile.properties.type;
+            if (type === 'bottom_left_corner') {
+                tile.physics.matterBody.body.label = type;
+            } else if (type === 'top_left_corner') {
+                tile.physics.matterBody.body.label = type;
+            }else if (type === 'bottom_right_corner') {
+                tile.physics.matterBody.body.label = type;
+            }else if (type === 'top_right_corner') {
+                tile.physics.matterBody.body.label = type;
+            }else if (type === 'left_wall') {
+                tile.physics.matterBody.body.label = type;
+            }else if(type ==='right_wall'){
+                tile.physics.matterBody.body.label = type;
+            }else if (type === 'top_wall') {
+                tile.physics.matterBody.body.label = type;
+            }else if (type === 'bottom_wall') {
+                tile.physics.matterBody.body.label = type;
+            }
+        })
 
         // UI
         let right = this.add.image(376, 104, 'arrow').setInteractive()
@@ -47,21 +67,21 @@ export default class Game extends Phaser.Scene {
         left.on('pointerover', () => { this.move.left = true }, this);
         left.on('pointerout', () => { this.move.left = false }, this);
         left.on('pointerup', () => { this.move.left = false }, this);
-        let fullscreen = this.add.image(16,16,'fullscreen').setInteractive()
-        fullscreen.on('pointerover',()=>{
+        let fullscreen = this.add.image(16, 16, 'fullscreen').setInteractive()
+        fullscreen.on('pointerover', () => {
             var canvas = this.sys.game.canvas;
             var fullscreen = this.sys.game.device.fullscreen;
             // make it a toggle
-            window.fullscreenFunc = function() {
+            window.fullscreenFunc = function () {
                 canvas[fullscreen.request]()
             }
-        },this)
-        fullscreen.on('pointerout',()=>{
-            window.fullscreenFunc=null
-        },this)
+        }, this)
+        fullscreen.on('pointerout', () => {
+            window.fullscreenFunc = null
+        }, this)
         menuContainer.add([right, left, fullscreen])
-        menuContainer.depth=1
-        menuContainer.each(gui=>{
+        menuContainer.depth = 1
+        menuContainer.each(gui => {
             gui.setScrollFactor(0)
         })
         // Player
@@ -69,15 +89,18 @@ export default class Game extends Phaser.Scene {
         this.car.setFixedRotation();
         this.car.setFrictionAir(0.05);
         this.car.setMass(30);
-        
+        this.car.speedBase = 1.0
+        this.car.speedMultiplier = this.car.speedBase
+        this.car.topSpeed = 2.0
+
         let particles = this.add.particles('tire_particle')
         this.emitter = particles.createEmitter({
-            speed:100,
-            scale:{start:0,end:1},
-            alpha:{start:1,end:0},
-            blendMode:'ADD',
+            speed: 100,
+            scale: { start: 0, end: 1 },
+            alpha: { start: 1, end: 0 },
+            blendMode: 'ADD',
         })
-        
+
         this.matter.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
         this.anims.create({
             key: 'idle',
@@ -91,16 +114,31 @@ export default class Game extends Phaser.Scene {
         this.cameras.main.setSize(416, 208);
         // Sets the camera bound to the tilemap h and w, so if we change it it 
         //will change aswell
-        this.cameras.main.setBounds(0,0,this.map.widthInPixels,this.map.heightInPixels)
+        this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels)
         this.cameras.main.startFollow(this.car)
     }
-    rightButton(event) {
-        // this.car.angle += 5
-        this.move.right = true
+
+    speedMultiplierReset() {
+        this.car.speedMultiplier = this.car.speedBase
     }
+
+    rightButton(event) {
+        this.move.right = true
+        this.speedMultiplierReset()
+    }
+
     leftButton(event) {
-        // this.car.angle += 5
         this.move.left = true
+        this.speedMultiplierReset()
+    }
+
+    // Increments the speed multiplier until it gets to the top speed.
+    speedMultiplierIncrease() {
+        let sm = this.car.speedMultiplier
+        let ts = this.car.topSpeed
+        let step = 0.1
+        sm = sm < ts ? sm + step : sm
+        this.car.speedMultiplier = sm
     }
     update() {
         if (this.move.right) {
@@ -108,11 +146,12 @@ export default class Game extends Phaser.Scene {
         } else if (this.move.left) {
             this.car.angle -= 5
         } else {
+            this.speedMultiplierIncrease()
             this.move.stop = true
         }
-        this.car.thrustLeft(0.01)
-        let angle = this.car.angle +90
-        this.emitter.setAngle(range(angle-10,angle+10))
-        
+        this.car.thrustLeft(0.01 * this.car.speedMultiplier)
+        let angle = this.car.angle + 90
+        this.emitter.setAngle(range(angle - 10, angle + 10))
+
     }
 }

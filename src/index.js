@@ -2,9 +2,6 @@ import 'phaser';
 import Game from './scenes/game'
 import Boot from './scenes/boot'
 
-
-
-
 var config = {
     type: Phaser.AUTO,
     parent: 'play',
