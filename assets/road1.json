@@ -75,6 +75,14 @@
                 {
                  "type":"bottom_right_corner"
                 },
+             "3":
+                {
+                 "type":"top_wall"
+                },
+             "39":
+                {
+                 "type":"bottom_wall"
+                },
              "5":
                 {
                  "type":"top_left_corner"
@@ -107,6 +115,14 @@
                  "type":"string"
                 },
              "24":
+                {
+                 "type":"string"
+                },
+             "3":
+                {
+                 "type":"string"
+                },
+             "39":
                 {
                  "type":"string"
                 },
