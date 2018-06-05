@@ -27,67 +27,52 @@ export default class Game extends Phaser.Scene {
         this.move = { right: false, left: false }
 
         // tilemap
-        let walls=['bottom_left_corner','top_left_corner','bottom_right_corner','top_right_corner','left_wall','right_wall','top_wall','bottom_wall']
+        let walls = ['bottom_left_corner', 'top_left_corner', 'bottom_right_corner', 'top_right_corner', 'left_wall', 'right_wall', 'top_wall', 'bottom_wall']
         let map = this.add.tilemap('tilemap')
         var grass_sheet = map.addTilesetImage('grass_sheet', 'grass');
         let backgroundLayer = map.createStaticLayer('grass', grass_sheet);
         var asphalt_sheet = map.addTilesetImage('asphalt_sheet', 'asphalt');
-        let roadLayer = map.createDynamicLayer('asphalt', asphalt_sheet,0,0)
+        let roadLayer = map.createDynamicLayer('asphalt', asphalt_sheet, 0, 0)
         roadLayer.setCollisionByProperty({ type: walls })
-        this.matter.world.setBounds(0,0,map.widthInPixels, map.heightInPixels);
+        this.matter.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.matter.world.convertTilemapLayer(roadLayer);
         roadLayer.forEachTile((tile) => {
             let type = tile.properties.type;
-            if (type === 'bottom_left_corner') {
-                tile.physics.matterBody.body.label = 'wall';
-            } else if (type === 'top_left_corner') {
-                tile.physics.matterBody.body.label = type;
-            }else if (type === 'bottom_right_corner') {
-                tile.physics.matterBody.body.label = type;
-            }else if (type === 'top_right_corner') {
-                tile.physics.matterBody.body.label = type;
-            }else if (type === 'left_wall') {
-                tile.physics.matterBody.body.label = type;
-            }else if(type === 'right_wall'){
-                tile.physics.matterBody.body.label = type;
-            }else if (type === 'top_wall') {
-                tile.physics.matterBody.body.label = 'wall';
-            }else if (type === 'bottom_wall') {
-                tile.physics.matterBody.body.label = type;
-            }
+            // this code should replace the switch below
+            walls.forEach(wall => {
+                if (wall == type) {
+                    tile.physics.matterBody.body.label = 'wall'
+                }
+            })
         })
         // Loop over all the collision pairs that start colliding on each step of the Matter engine.
         this.matter.world.on('collisionstart', function (event) {
-            for (var i = 0; i < event.pairs.length; i++)
-            {
+            for (var i = 0; i < event.pairs.length; i++) {
                 // The tile bodies in this example are a mixture of compound bodies and simple rectangle
                 // bodies. The "label" property was set on the parent body, so we will first make sure
                 // that we have the top level body instead of a part of a larger compound body.
                 var bodyA = getRootBody(event.pairs[i].bodyA);
                 var bodyB = getRootBody(event.pairs[i].bodyB);
-                console.log(bodyA)
-                console.log(bodyB)
                 if ((bodyA.label === 'car' && bodyB.label === 'wall') ||
-                    (bodyB.label === 'car' && bodyA.label === 'wall'))
-                {
-                    const ballBody = bodyA.label === 'ball' ? bodyA : bodyB;
-                    const ball = ballBody.gameObject;
-                
+                    (bodyB.label === 'car' && bodyA.label === 'wall')) {
+                    const carBody = bodyA.label === 'car' ? bodyA : bodyB;
+                    const car = carBody.gameObject;
+
                     // A body may collide with multiple other bodies in a step, so we'll use a flag to
                     // only tween & destroy the ball once.
-                    if (ball.isBeingDestroyed)
-                    {
-                        continue;
-                    }
-                    ball.isBeingDestroyed = true;
-                
-                    this.matter.world.remove(ballBody);
-                
-                    this.tweens.add({
-                        targets: ball,
-                        alpha: { value: 0, duration: 150, ease: 'Power1' },
-                        onComplete: function (ball) { ball.destroy(); }.bind(this, ball)
-                    });
+                    // if (car.isBeingDestroyed)
+                    // {
+                    //     continue;
+                    // }
+                    // car.isBeingDestroyed = true;
+
+                    // this.matter.world.remove(carBody);
+
+                    // this.tweens.add({
+                    //     targets: car,
+                    //     alpha: { value: 0, duration: 150, ease: 'Power1' },
+                    //     onComplete: function (car) { car.destroy(); }.bind(this, car)
+                    // });
                 }
             }
         }, this);
@@ -95,13 +80,13 @@ export default class Game extends Phaser.Scene {
         let right = this.add.image(376, 104, 'arrow').setInteractive()
         let left = this.add.image(40, 104, 'arrow').setInteractive()
         left.angle = 180
-        right.on('pointerdown', () => { this.move.right = true }, this);
-        right.on('pointerover', () => { this.move.right = true }, this);
+        right.on('pointerdown', this.rightButton, this);
+        right.on('pointerover', this.rightButton, this);
         right.on('pointerout', () => { this.move.right = false }, this);
         right.on('pointerup', () => { this.move.right = false }, this);
 
-        left.on('pointerdown', () => { this.move.left = true }, this);
-        left.on('pointerover', () => { this.move.left = true }, this);
+        left.on('pointerdown', this.leftButton, this);
+        left.on('pointerover', this.leftButton, this);
         left.on('pointerout', () => { this.move.left = false }, this);
         left.on('pointerup', () => { this.move.left = false }, this);
         let fullscreen = this.add.image(16, 16, 'fullscreen').setInteractive()
@@ -129,11 +114,12 @@ export default class Game extends Phaser.Scene {
         this.car.speedBase = 1.0
         this.car.speedMultiplier = this.car.speedBase
         this.car.topSpeed = 2.0
-        this.car.body.label='car'
+        this.car.body.label = 'car'
+        this.car.body.restitution = 1
 
         let particles = this.add.particles('tire_particle')
         this.emitter = particles.createEmitter({
-            speed: 100,
+            speed: 30,
             scale: { start: 0, end: 1 },
             alpha: { start: 1, end: 0 },
             blendMode: 'ADD',
@@ -147,6 +133,7 @@ export default class Game extends Phaser.Scene {
         })
         this.car.play('idle')
         this.emitter.startFollow(this.car)
+        console.log(this.emitter)
         // Camera
         this.cameras.main.setSize(416, 208);
         // Sets the camera bound to the tilemap h and w, so if we change it it 
@@ -177,6 +164,15 @@ export default class Game extends Phaser.Scene {
         sm = sm < ts ? sm + step : sm
         this.car.speedMultiplier = sm
     }
+    checkEmitter(object) {
+        let sm = object.speedMultiplier
+        let ts = object.topSpeed
+        if(sm<ts){
+            this.emitter.startFollow(this.car)
+        }else{
+            this.emitter.stopFollow()
+        }
+    }
     update() {
         if (this.move.right) {
             this.car.angle += 5
@@ -187,8 +183,6 @@ export default class Game extends Phaser.Scene {
             this.move.stop = true
         }
         this.car.thrustLeft(0.01 * this.car.speedMultiplier)
-        let angle = this.car.angle + 90
-        this.emitter.setAngle(range(angle - 10, angle + 10))
-
+        this.checkEmitter(this.car)
     }
 }
