@@ -15,11 +15,13 @@ export default class Game extends Phaser.Scene {
     preload() {
         this.load.image('arrow', 'assets/arrow.png');
         this.load.spritesheet('car', 'assets/car.png', { frameWidth: 12, frameHeight: 16 });
+        this.load.image('ball', 'assets/pangball.png');
         this.load.tilemapTiledJSON('tilemap', 'assets/road1.json')
-        this.load.image('asphalt', 'assets/asphalt_sheet.png')
+        this.load.image('asphalt', 'assets/asphalt_sheet.jpeg')
         this.load.image('grass', 'assets/grass_sheet.png')
         this.load.spritesheet('tire_particle', 'assets/tire_particle.png', { frameWidth: 8, frameHeight: 8 })
         this.load.spritesheet('fullscreen', 'assets/fullscreen.png', { frameWidth: 16, frameHeight: 16 })
+
     }
 
     create() {
@@ -28,65 +30,62 @@ export default class Game extends Phaser.Scene {
 
         // tilemap
         let walls = ['corner_down_left', 'corner_up_left', 'corner_down_right', 'corner_up_right', 'wall_left', 'wall_right', 'wall_up', 'wall_down']
+        let slow = ['grass']
+        let boost = []
+        let bad = []
+        // let tileCollide = walls.concat(slow,boost,bad)
+        let tileCollide = slow
         let map = this.add.tilemap('tilemap')
         var grass_sheet = map.addTilesetImage('grass_sheet', 'grass');
-        let backgroundLayer = map.createStaticLayer('grass', grass_sheet);
+        let grassLayer = map.createStaticLayer('grass', grass_sheet);
+        grassLayer.setCollisionByProperty({ type: tileCollide })
+        this.matter.world.convertTilemapLayer(grassLayer);
         var asphalt_sheet = map.addTilesetImage('asphalt_sheet', 'asphalt');
         let roadLayer = map.createDynamicLayer('asphalt', asphalt_sheet, 0, 0)
-        roadLayer.setCollisionByProperty({ type: walls })
         this.matter.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-        this.matter.world.convertTilemapLayer(roadLayer);
-        roadLayer.forEachTile((tile) => {
+
+        grassLayer.forEachTile((tile) => {
             let type = tile.properties.type;
             // this code should replace the switch below
 
-            walls.forEach(wall => {
+            tileCollide.forEach(wall => {
                 if (wall == type) {
-                    let collisions = type.split('_')
-                    collisions.shift()
-                    collisions.forEach(c => {
-                        c = c.charAt(0).toUpperCase() + c.slice(1)
-                        let r = "collide" + c
-                        tile[r] = true
-                    })
-                    if(collisions.length==1&&collisions[0]=='up'){
-                        console.log(tile)
-                    }
                     tile.physics.matterBody.body.label = 'wall'
                 }
             })
         })
+        // THIS BLOCK OF CODE IS NECESSARY IF WE'D LIKE TO PROGRAM INTERACTION BETWEEN BODIES.
         // Loop over all the collision pairs that start colliding on each step of the Matter engine.
-        this.matter.world.on('collisionstart', function (event) {
-            for (var i = 0; i < event.pairs.length; i++) {
-                // The tile bodies in this example are a mixture of compound bodies and simple rectangle
-                // bodies. The "label" property was set on the parent body, so we will first make sure
-                // that we have the top level body instead of a part of a larger compound body.
-                var bodyA = getRootBody(event.pairs[i].bodyA);
-                var bodyB = getRootBody(event.pairs[i].bodyB);
-                if ((bodyA.label === 'car' && bodyB.label === 'wall') ||
-                    (bodyB.label === 'car' && bodyA.label === 'wall')) {
-                    const carBody = bodyA.label === 'car' ? bodyA : bodyB;
-                    const car = carBody.gameObject;
+        // this.matter.world.on('collisionstart', function (event) {
+        //     for (var i = 0; i < event.pairs.length; i++) {
+        //         // The tile bodies in this example are a mixture of compound bodies and simple rectangle
+        //         // bodies. The "label" property was set on the parent body, so we will first make sure
+        //         // that we have the top level body instead of a part of a larger compound body.
+        //         var bodyA = getRootBody(event.pairs[i].bodyA);
+        //         var bodyB = getRootBody(event.pairs[i].bodyB);
+        //         if ((bodyA.label === 'car' && bodyB.label === 'wall') ||
+        //             (bodyB.label === 'car' && bodyA.label === 'wall')) {
+        //             const carBody = bodyA.label === 'car' ? bodyA : bodyB;
+        //             const car = carBody.gameObject;
 
-                    // A body may collide with multiple other bodies in a step, so we'll use a flag to
-                    // only tween & destroy the ball once.
-                    // if (car.isBeingDestroyed)
-                    // {
-                    //     continue;
-                    // }
-                    // car.isBeingDestroyed = true;
+        //             // A body may collide with multiple other bodies in a step, so we'll use a flag to
+        //             // only tween & destroy the ball once.
+        //             // if (car.isBeingDestroyed)
+        //             // {
+        //             //     continue;
+        //             // }
+        //             // car.isBeingDestroyed = true;
 
-                    // this.matter.world.remove(carBody);
+        //             // this.matter.world.remove(carBody);
 
-                    // this.tweens.add({
-                    //     targets: car,
-                    //     alpha: { value: 0, duration: 150, ease: 'Power1' },
-                    //     onComplete: function (car) { car.destroy(); }.bind(this, car)
-                    // });
-                }
-            }
-        }, this);
+        //             // this.tweens.add({
+        //             //     targets: car,
+        //             //     alpha: { value: 0, duration: 150, ease: 'Power1' },
+        //             //     onComplete: function (car) { car.destroy(); }.bind(this, car)
+        //             // });
+        //         }
+        //     }
+        // }, this);
         // UI
         let right = this.add.image(376, 104, 'arrow').setInteractive()
         let left = this.add.image(40, 104, 'arrow').setInteractive()
@@ -119,6 +118,11 @@ export default class Game extends Phaser.Scene {
         menuContainer.each(gui => {
             gui.setScrollFactor(0)
         })
+        // ball
+        let ball = this.matter.add.image(Phaser.Math.Between(82, 344), Phaser.Math.Between(41, 80), 'ball');
+        ball.setCircle();
+        ball.setFriction(0.005);
+        ball.setBounce(1);
         // Player
         this.car = this.matter.add.sprite(180, 100, 'car')
         this.car.setFixedRotation();
@@ -129,13 +133,17 @@ export default class Game extends Phaser.Scene {
         this.car.topSpeed = 2.0
         this.car.body.label = 'car'
         this.car.body.restitution = 1
-
         let particles = this.add.particles('tire_particle')
         this.emitter = particles.createEmitter({
             speed: 30,
-            scale: { start: 0, end: 1 },
+            frequency: 10,
+            scale: { start: 0, end: 0.5 },
             alpha: { start: 1, end: 0 },
             blendMode: 'ADD',
+            lifespan: {
+                "min": 300,
+                "max": 400
+            },
         })
 
         this.anims.create({
@@ -146,7 +154,6 @@ export default class Game extends Phaser.Scene {
         })
         this.car.play('idle')
         this.emitter.startFollow(this.car)
-        console.log(this.emitter)
         // Camera
         this.cameras.main.setSize(416, 208);
         // Sets the camera bound to the tilemap h and w, so if we change it it 
