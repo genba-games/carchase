@@ -27,7 +27,7 @@ export default class Game extends Phaser.Scene {
         this.move = { right: false, left: false }
 
         // tilemap
-        let walls = ['bottom_left_corner', 'top_left_corner', 'bottom_right_corner', 'top_right_corner', 'left_wall', 'right_wall', 'top_wall', 'bottom_wall']
+        let walls = ['corner_down_left', 'corner_up_left', 'corner_down_right', 'corner_up_right', 'wall_left', 'wall_right', 'wall_up', 'wall_down']
         let map = this.add.tilemap('tilemap')
         var grass_sheet = map.addTilesetImage('grass_sheet', 'grass');
         let backgroundLayer = map.createStaticLayer('grass', grass_sheet);
@@ -39,8 +39,19 @@ export default class Game extends Phaser.Scene {
         roadLayer.forEachTile((tile) => {
             let type = tile.properties.type;
             // this code should replace the switch below
+
             walls.forEach(wall => {
                 if (wall == type) {
+                    let collisions = type.split('_')
+                    collisions.shift()
+                    collisions.forEach(c => {
+                        c = c.charAt(0).toUpperCase() + c.slice(1)
+                        let r = "collide" + c
+                        tile[r] = true
+                    })
+                    if(collisions.length==1&&collisions[0]=='up'){
+                        console.log(tile)
+                    }
                     tile.physics.matterBody.body.label = 'wall'
                 }
             })
@@ -89,6 +100,7 @@ export default class Game extends Phaser.Scene {
         left.on('pointerover', this.leftButton, this);
         left.on('pointerout', () => { this.move.left = false }, this);
         left.on('pointerup', () => { this.move.left = false }, this);
+
         let fullscreen = this.add.image(16, 16, 'fullscreen').setInteractive()
         fullscreen.on('pointerover', () => {
             var canvas = this.sys.game.canvas;
@@ -101,6 +113,7 @@ export default class Game extends Phaser.Scene {
         fullscreen.on('pointerout', () => {
             window.fullscreenFunc = null
         }, this)
+
         menuContainer.add([right, left, fullscreen])
         menuContainer.depth = 1
         menuContainer.each(gui => {
@@ -167,11 +180,7 @@ export default class Game extends Phaser.Scene {
     checkEmitter(object) {
         let sm = object.speedMultiplier
         let ts = object.topSpeed
-        if(sm<ts){
-            this.emitter.startFollow(this.car)
-        }else{
-            this.emitter.stopFollow()
-        }
+        this.emitter.on = sm < ts ? true : false
     }
     update() {
         if (this.move.right) {

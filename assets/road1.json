@@ -57,7 +57,7 @@
             {
              "20":
                 {
-                 "type":"left_wall"
+                 "type":"wall_left"
                 },
              "21":
                 {
@@ -65,31 +65,31 @@
                 },
              "22":
                 {
-                 "type":"right_wall"
+                 "type":"wall_right"
                 },
              "23":
                 {
-                 "type":"bottom_left_corner"
+                 "type":"corner_down_left"
                 },
              "24":
                 {
-                 "type":"bottom_right_corner"
+                 "type":"corner_down_right"
                 },
              "3":
                 {
-                 "type":"top_wall"
+                 "type":"wall_up"
                 },
              "39":
                 {
-                 "type":"bottom_wall"
+                 "type":"wall_down"
                 },
              "5":
                 {
-                 "type":"top_left_corner"
+                 "type":"corner_up_left"
                 },
              "6":
                 {
-                 "type":"top_right_corner"
+                 "type":"corner_up_right"
                 },
              "71":
                 {
@@ -143,27 +143,27 @@
             {
              "20":
                 {
-                 "type":"left_wall"
+                 "type":"wall_left"
                 },
              "22":
                 {
-                 "type":"right_wall"
+                 "type":"wall_right"
                 },
              "23":
                 {
-                 "type":"bottom_left_corner"
+                 "type":"corner_down_left"
                 },
              "24":
                 {
-                 "type":"bottom_right_corner"
+                 "type":"corner_down_right"
                 },
              "5":
                 {
-                 "type":"top_left_corner"
+                 "type":"corner_up_left"
                 },
              "6":
                 {
-                 "type":"top_right_corner"
+                 "type":"corner_up_right"
                 }
             },
          "tilewidth":16
